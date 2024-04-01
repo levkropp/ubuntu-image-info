@@ -8,4 +8,13 @@ set(CMAKE_CXX_STANDARD 17)
 #Include include/
 include_directories(include)
 
-add_executable(ubuntu_image_info src/main.cpp)
+#Include curl and nlohmann/json
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+include_directories(external/json)
+
+add_executable(ubuntu_image_info src/main.cpp
+        include/ubuntu_image_info.h
+        src/ubuntu_image_info.cpp)
+
+target_link_libraries(ubuntu_image_info ${CURL_LIBRARIES})
