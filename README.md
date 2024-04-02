@@ -9,7 +9,7 @@ This project provides a command line tool/interface for fetching the latest Ubun
 - nlohmann/json (for JSON parsing)
 - CMake (for building the project)
 
-## Build Instructions
+## Build Instructions (Linux & Mac)
 
 1. Clone the repository:
    ```
@@ -30,6 +30,12 @@ This project provides a command line tool/interface for fetching the latest Ubun
    ```
    ./ubuntu_image_info
    ```
+
+### Windows
+
+Building works on Visual Studio 2022 with `cmake --build .`
+
+You will need to put libcurl.dll (renamed to libcurl-d.dll if it is a Debug build) and zlib1.dll from your vcpkg_installed folder in the same folder as the generated .exe to run it. (see ubuntu_image_info_win64.zip in Releases)
 
 ## Usage
 
