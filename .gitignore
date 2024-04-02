@@ -1,2 +1,5 @@
 .idea/
 cmake-build-debug/
+.vs/
+.cmake/
+vcpkg_installed/
