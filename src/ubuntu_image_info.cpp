@@ -78,13 +78,19 @@ public:
             std::string releaseKey;
 
             if (release == "latest") {
-                //Set the release key to the latest release
+                //Set the release key to the latest release ending in "amd64"
                 if (!products.empty()) {
-                    releaseKey = products.rbegin().key();
-                } else {
-                    throw std::runtime_error("No releases found in the JSON data");
+                    for (auto it = products.rbegin(); it != products.rend(); ++it) {
+                        const std::string &key = it.key();
+                        if (key.find(":amd64") != std::string::npos) {
+                            releaseKey = key;
+                            break;
+                        }
+                    }
+                    if (releaseKey.empty()) {
+                        throw std::runtime_error("No releases ending in 'amd64' found in the JSON data");
+                    }
                 }
-
             } else {
                 //Construct the release key from the version number
                 //in the format "com.ubuntu.cloud:server:version:amd64"
