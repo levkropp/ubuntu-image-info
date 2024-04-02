@@ -16,14 +16,14 @@ public:
 
     // Implementation of pure virtual methods
     std::vector<std::string> getSupportedReleases() override {
-        std::vector<std::string> releases {};
+        std::vector<std::string> releases{};
 
         try {
             //Get all the products
-            const auto& products = jsonData["products"];
+            const auto &products = jsonData["products"];
 
-            for (const auto& product : products.items()) {
-                const std::string& release = product.key();
+            for (const auto &product: products.items()) {
+                const std::string &release = product.key();
                 // Check if the release name ends with "amd64"
                 if (release.size() >= 5 && release.substr(release.size() - 5) == "amd64") {
 
@@ -35,7 +35,7 @@ public:
                 }
             }
 
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             throw std::runtime_error("Failed to parse JSON data: " + std::string(e.what()));
 
         }
@@ -48,7 +48,7 @@ public:
 
         // Iterate backwards over the releases vector
         for (auto it = releases.rbegin(); it != releases.rend(); ++it) {
-            const auto& release = *it;
+            const auto &release = *it;
 
             std::istringstream iss(release);
             std::string token;
@@ -71,9 +71,9 @@ public:
 
     }
 
-    std::string getSHA256(const std::string& release) override {
+    std::string getSHA256(const std::string &release) override {
         try {
-            const auto& products = jsonData["products"];
+            const auto &products = jsonData["products"];
 
             std::string releaseKey;
 
@@ -88,15 +88,15 @@ public:
             } else {
                 //Construct the release key from the version number
                 //in the format "com.ubuntu.cloud:server:version:amd64"
-                releaseKey = "com.ubuntu.cloud:server:"+release+":amd64";
+                releaseKey = "com.ubuntu.cloud:server:" + release + ":amd64";
             }
 
             if (products.contains(releaseKey)) {
-                const auto& versions = products[releaseKey]["versions"];
+                const auto &versions = products[releaseKey]["versions"];
 
                 if (!versions.empty()) {
-                    const auto& lastVersion = versions.back();
-                    const auto& items = lastVersion["items"];
+                    const auto &lastVersion = versions.back();
+                    const auto &items = lastVersion["items"];
                     if (items.contains("disk1.img")) {
                         return items["disk1.img"]["sha256"].get<std::string>();
                     }
@@ -106,8 +106,8 @@ public:
 
 
         }
-        catch (const std::exception& e) {
-            throw std::runtime_error("Failed to retrieve SHA256: "+ std::string(e.what()));
+        catch (const std::exception &e) {
+            throw std::runtime_error("Failed to retrieve SHA256: " + std::string(e.what()));
         }
 
         //No SHA found for release
@@ -116,8 +116,8 @@ public:
     }
 
 private:
-    static std::string downloadJson(const std::string& url) {
-        CURL* curl = curl_easy_init();
+    static std::string downloadJson(const std::string &url) {
+        CURL *curl = curl_easy_init();
 
         if (!curl) {
             throw std::runtime_error("Failed to initialize libcurl");
@@ -131,8 +131,8 @@ private:
         CURLcode result = curl_easy_perform(curl);
 
         if (result != CURLE_OK) {
-            throw std::runtime_error("Failed to download JSON data: "+
-            std::string(curl_easy_strerror(result)));
+            throw std::runtime_error("Failed to download JSON data: " +
+                                     std::string(curl_easy_strerror(result)));
         }
 
         curl_easy_cleanup(curl);
@@ -141,8 +141,8 @@ private:
 
     }
 
-    static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
-        auto* buffer = static_cast<std::stringstream*>(userdata);
+    static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+        auto *buffer = static_cast<std::stringstream *>(userdata);
         buffer->write(ptr, static_cast<std::streamsize>(size * nmemb));
         return size * nmemb;
     }

@@ -12,8 +12,10 @@ public:
 
     //Declare pure virtual methods
     virtual std::vector<std::string> getSupportedReleases() = 0;
+
     virtual std::string getCurrentLTSVersion() = 0;
-    virtual std::string getSHA256(const std::string& release) = 0;
+
+    virtual std::string getSHA256(const std::string &release) = 0;
 
 };
 
