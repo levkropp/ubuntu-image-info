@@ -7,10 +7,23 @@ int main() {
     try {
         UbuntuImageInfoImpl imageInfo;
 
-        //Print the JSON data
-        std::string jsonData = imageInfo.getJsonData();
-        std::cout << "JSON data: " << std::endl;
-        std::cout << jsonData << std::endl;
+        //Print the releases
+
+        auto releases = imageInfo.getSupportedReleases();
+
+        std::cout << "Releases: " << std::endl;
+
+        for (auto release : releases) {
+            std::cout << release << std::endl;
+        }
+
+        std::cout << "Current LTS Version: " << imageInfo.getCurrentLTSVersion() << std::endl;
+
+
+        std::cout << "10.04 sha256: " << imageInfo.getSHA256("10.04") << std::endl;
+        std::cout << "latest sha256: " << imageInfo.getSHA256("latest") << std::endl;
+
+
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

@@ -4,35 +4,115 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "../external/json/json.hpp"
+
 //Derived class implementation of UbuntuImageInfo
 class UbuntuImageInfoImpl : public UbuntuImageInfo {
 public:
     UbuntuImageInfoImpl() {
         std::string url = "https://cloud-images.ubuntu.com/releases/streams/v1/com.ubuntu.cloud:released:download.json";
-        jsonData = UbuntuImageInfoImpl::downloadJson(url);
-
-        //TODO: Parse the JSON data and store it in a member variable for later use
-    }
-
-    std::string getJsonData() const {
-        return jsonData;
+        jsonData = nlohmann::json::parse(UbuntuImageInfoImpl::downloadJson(url));
     }
 
     // Implementation of pure virtual methods
     std::vector<std::string> getSupportedReleases() override {
-        //TODO: Implement extracting supported releases from parsed JSON data
         std::vector<std::string> releases {};
+
+        try {
+            //Get all the products
+            const auto& products = jsonData["products"];
+
+            for (const auto& product : products.items()) {
+                const std::string& release = product.key();
+                // Check if the release name ends with "amd64"
+                if (release.size() >= 5 && release.substr(release.size() - 5) == "amd64") {
+
+                    //Check if the releases supported value is true
+                    if (products[product.key()]["supported"].get<bool>()) {
+                        releases.push_back(release);
+                    }
+
+                }
+            }
+
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Failed to parse JSON data: " + std::string(e.what()));
+
+        }
+
         return releases;
     }
 
     std::string getCurrentLTSVersion() override {
-        //TODO: Implement determining current LTS version from the parsed JSON data
-        return "23.10";
+        std::vector<std::string> releases = getSupportedReleases();
+
+        // Iterate backwards over the releases vector
+        for (auto it = releases.rbegin(); it != releases.rend(); ++it) {
+            const auto& release = *it;
+
+            std::istringstream iss(release);
+            std::string token;
+
+            // Skip the first two tokens (com.ubuntu.cloud:server)
+            std::getline(iss, token, ':');
+            std::getline(iss, token, ':');
+
+            // Get the version number token
+            std::getline(iss, token, ':');
+
+            // Check if the version number ends with ".04"
+            if (token.size() >= 3 && token.substr(token.size() - 3) == ".04") {
+                return token;
+            }
+        }
+
+        // No LTS version found
+        return "";
+
     }
 
     std::string getSHA256(const std::string& release) override {
-        //TODO: Implement finding the SHA256 has of the disk1.img for the given release
-        return release;
+        try {
+            const auto& products = jsonData["products"];
+
+            std::string releaseKey;
+
+            if (release == "latest") {
+                //Set the release key to the latest release
+                if (!products.empty()) {
+                    releaseKey = products.rbegin().key();
+                } else {
+                    throw std::runtime_error("No releases found in the JSON data");
+                }
+
+            } else {
+                //Construct the release key from the version number
+                //in the format "com.ubuntu.cloud:server:version:amd64"
+                releaseKey = "com.ubuntu.cloud:server:"+release+":amd64";
+            }
+
+            if (products.contains(releaseKey)) {
+                const auto& versions = products[releaseKey]["versions"];
+
+                if (!versions.empty()) {
+                    const auto& lastVersion = versions.back();
+                    const auto& items = lastVersion["items"];
+                    if (items.contains("disk1.img")) {
+                        return items["disk1.img"]["sha256"].get<std::string>();
+                    }
+                }
+
+            }
+
+
+        }
+        catch (const std::exception& e) {
+            throw std::runtime_error("Failed to retrieve SHA256: "+ std::string(e.what()));
+        }
+
+        //No SHA found for release
+        return "";
+
     }
 
 private:
@@ -67,6 +147,6 @@ private:
         return size * nmemb;
     }
 
-    std::string jsonData {"No data"};
+    nlohmann::json jsonData;
 
 };
